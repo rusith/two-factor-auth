@@ -8,12 +8,14 @@
     "test": "jest",
     "dev": "nodemon --watch . --exec ts-node src/index.ts --",
     "build": "tsc",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "prisma:generate": "prisma generate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@simplewebauthn/typescript-types": "^7.0.0",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.4.0",
@@ -35,13 +37,18 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@prisma/client": "^4.11.0",
+    "@simplewebauthn/server": "^7.0.1",
+    "@types/jsonwebtoken": "^9.0.1",
     "@types/mongoose": "^5.11.97",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "inversify": "^6.0.1",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.1",
     "nanoid": "3.3.4",
+    "prisma": "^4.11.0",
     "redis": "^4.6.5",
     "reflect-metadata": "^0.1.13",
     "socket.io": "^4.6.1"

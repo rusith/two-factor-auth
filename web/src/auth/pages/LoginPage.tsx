@@ -20,7 +20,7 @@ const LoginPage: React.FC = () => {
           />
         </div>
 
-        <div className="flex flex-col mt-3">
+        <div className="flex flex-col mt-2">
           <label className="block mt-3 font-semibold" htmlFor="password">
             Password
           </label>

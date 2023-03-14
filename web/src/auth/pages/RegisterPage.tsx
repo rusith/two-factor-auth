@@ -20,7 +20,7 @@ const RegisterPage: React.FC = () => {
         <p className="text-sm text-center text-gray-700 font-semibold mt-auto">
           Already a User?
           <Link to={paths.login} className="text-blue-500 ml-1 underline">
-            Register
+            Login
           </Link>
         </p>
       </div>

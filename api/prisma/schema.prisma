@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  name               String
+  email              String              @unique
+  password           String
+  salt               String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  currentChallange   String?
+  userAuthenticators UserAuthenticator[]
+
+  @@map("users")
+}
+
+model UserAuthenticator {
+  credentialID         String  @id
+  credentialPublicKey  Bytes
+  counter              BigInt
+  credentialDeviceType String  @db.VarChar(32)
+  credentialBackedUp   Boolean
+  transports           String  @db.VarChar(255)
+  user                 User    @relation(fields: [userId], references: [id])
+  userId               String
+
+  @@map("user_authenticators")
+}
