@@ -15,10 +15,13 @@ export interface AuthService {
     data: RegistrationResponse,
     userId: string
   ): Promise<boolean>;
+
+  removeTwoFactorRegistration(userId: string): Promise<void>;
 }
 
 export interface AuthController {
   login(req: Request, res: Response): Promise<void>;
   getTwoFactorRegistrationOptions(req: Request, res: Response): Promise<void>;
   verifyTwoFactorRegistration(req: Request, res: Response): Promise<void>;
+  removeTwoFactorRegistration(req: Request, res: Response): Promise<void>;
 }

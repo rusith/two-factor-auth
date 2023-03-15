@@ -25,14 +25,17 @@ export function authenticatedApi(
       return sendUnauthorized();
     }
 
-    const userId = await tokenHelper.verifyAuthToken(token);
+    try {
+      const userId = await tokenHelper.verifyAuthToken(token);
+      if (!userId) {
+        return sendUnauthorized();
+      }
 
-    if (!userId) {
+      res.locals.userId = userId;
+
+      next();
+    } catch {
       return sendUnauthorized();
     }
-
-    res.locals.userId = userId;
-
-    next();
   };
 }

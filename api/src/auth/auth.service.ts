@@ -2,7 +2,6 @@ import { ValidationError } from '@app/errors/ValidationError';
 import {
   AuthProvider,
   AuthTokenHelper,
-  ConfigProvider,
   PublicKeyCredentialCreationOptions,
   RegistrationResponse,
   UtilHelper
@@ -19,8 +18,6 @@ export class AuthServiceImpl implements AuthService {
     @inject(TYPES.UtilHelper) private readonly utilHelper: UtilHelper,
     @inject(TYPES.AuthTokenHelper)
     private readonly authTokenHelper: AuthTokenHelper,
-    @inject(TYPES.ConfigProvider)
-    private readonly configProvider: ConfigProvider,
     @inject(TYPES.DBProvider)
     private readonly dbProvider: DBProvider,
     @inject(TYPES.AuthProvider)
@@ -124,5 +121,13 @@ export class AuthServiceImpl implements AuthService {
     }
 
     return this.authProvider.verifyRegistrationResponse(data, user);
+  }
+
+  async removeTwoFactorRegistration(userId: string): Promise<void> {
+    const dbClient = this.dbProvider.createClient();
+
+    await dbClient.userAuthenticator.deleteMany({
+      where: { userId }
+    });
   }
 }

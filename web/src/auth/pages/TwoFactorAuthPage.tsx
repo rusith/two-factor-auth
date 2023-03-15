@@ -1,4 +1,5 @@
-import { apiBaseUrl, paths } from '@app/consts';
+import { paths } from '@app/consts';
+import { useApi } from '@app/shared/hooks/useApi';
 import { startRegistration } from '@simplewebauthn/browser';
 import React from 'react';
 import toast from 'react-hot-toast';
@@ -8,15 +9,7 @@ import ProtedtedPage from '../components/ProtectedPage';
 const TwoFactorAuthPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
-  function handleSkip() {
-    const search = new URLSearchParams(location.search);
-    if (search.has('go')) {
-      navigate(decodeURI(search.get('go') || ''));
-    } else {
-      navigate(paths.dashboard);
-    }
-  }
+  const api = useApi();
 
   function goToNextPage() {
     const search = new URLSearchParams(location.search);
@@ -28,52 +21,42 @@ const TwoFactorAuthPage: React.FC = () => {
   }
 
   async function handleSetup() {
-    console.log(localStorage.getItem('token'));
-    let result = await fetch(`${apiBaseUrl}/auth/two-factor-auth/options`, {
-      method: 'GET',
-      headers: {
-        authorization: `${localStorage.getItem('token')}`
-      }
-    });
-
-    let data = await result.json();
-
-    if (!result.ok || !data.success) {
-      return toast.error(
-        data.error || 'Failed to setup TFA. Please try again.'
-      );
-    }
-
-    let attResp;
     try {
-      attResp = await startRegistration(data.data);
+      const options = await api.get<{ success: boolean; data: any }>(
+        '/auth/two-factor-auth/options'
+      );
+      if (options.success) {
+        let attResp;
+        try {
+          attResp = await startRegistration(options.data);
+        } catch (err: any) {
+          if (err.name === 'InvalidStateError') {
+            goToNextPage();
+            return;
+          } else {
+            toast.error(
+              'Something went wrong while setting up TFA. Try again.'
+            );
+            return;
+          }
+        }
+
+        const verifyResult = await api.post<{
+          success: boolean;
+          error: string;
+        }>('/auth/two-factor-auth/verify', attResp);
+
+        if (verifyResult.success) {
+          toast.success('Two factor setup successful!');
+          goToNextPage();
+        } else {
+          toast.error(
+            verifyResult.error || 'Failed to setup. Please try again.'
+          );
+        }
+      }
     } catch (err: any) {
-      if (err.name === 'InvalidStateError') {
-        goToNextPage();
-        return;
-      } else {
-        console.log(err);
-        toast.error('Something went wrong while setting up TFA. Try again.');
-        return;
-      }
-    }
-
-    result = await fetch(`${apiBaseUrl}/auth/two-factor-auth/verify`, {
-      method: 'POST',
-      body: JSON.stringify(attResp),
-      headers: {
-        'Content-Type': 'application/json',
-        authorization: `${localStorage.getItem('token')}`
-      }
-    });
-
-    data = await result.json();
-
-    if (result.ok && data.success && data.data) {
-      toast.success('TFA setup successful!');
-      goToNextPage();
-    } else {
-      toast.error(data.error || 'Failed to setup TFA. Please try again.');
+      toast.error('Failed to setup. Please try again.');
     }
   }
 
@@ -87,12 +70,12 @@ const TwoFactorAuthPage: React.FC = () => {
             Enable two factor authentication
           </p>
 
-          <img src="/images/fingerprint.svg" className="w-20" />
+          <img src="/images/fingerprint.svg" className="w-28 m-auto" />
 
           <div className="flex justify-center mt-auto">
             <button
               className="mt-3 bg-gray-500 w-fit p-2 pt-1 pb-1 rounded text-white"
-              onClick={handleSkip}
+              onClick={goToNextPage}
             >
               Skip
             </button>

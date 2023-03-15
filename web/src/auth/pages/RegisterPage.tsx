@@ -1,4 +1,5 @@
-import { apiBaseUrl, paths } from '@app/consts';
+import { paths } from '@app/consts';
+import { useApi } from '@app/shared/hooks/useApi';
 import React from 'react';
 import { toast } from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -18,28 +19,17 @@ const RegisterPage: React.FC = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const api = useApi();
 
   async function handleRegister() {
-    const result = await fetch(`${apiBaseUrl}/users`, {
-      body: JSON.stringify({
-        name,
-        email,
-        password
-      }),
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!result.ok) {
-      const data = await result.json();
-      return toast.error(data.message || 'Something went wrong');
+    if (!name || !email || !password) return;
+    try {
+      await api.post('/users', { name, email, password });
+      toast.success('Account created successfully!');
+      navigate(`${paths.login}${location.search}`);
+    } catch (e: any) {
+      return toast.error(e.message || 'Something went wrong');
     }
-
-    toast.success('Account created successfully!');
-
-    navigate(`${paths.login}${location.search}`);
   }
 
   return (

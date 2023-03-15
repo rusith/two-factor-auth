@@ -1,65 +1,66 @@
-import { apiBaseUrl, paths } from '@app/consts';
+import { paths, tokenKey } from '@app/consts';
+import { useApi } from '@app/shared/hooks/useApi';
 import { startAuthentication } from '@simplewebauthn/browser';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+
+type AuthResult = {
+  success: boolean;
+  data: { token?: string; twoFactorAuthenticationOptions?: any };
+};
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const api = useApi();
+
+  function handleSuccessfullogin(token: string, twoFactor = false) {
+    toast.success('Login successful!');
+    localStorage.setItem(tokenKey, token);
+    if (twoFactor) {
+      navigate(`${paths.tfa}${location.search}`);
+    } else {
+      const search = new URLSearchParams(location.search);
+      if (search.has('go')) {
+        navigate(decodeURI(search.get('go') || ''));
+      } else {
+        navigate(paths.dashboard);
+      }
+    }
+  }
 
   async function handleLogin() {
     if (!email || !password) return;
 
-    const result = await fetch(`${apiBaseUrl}/auth`, {
-      body: JSON.stringify({ email, password }),
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    try {
+      const result = await api.post<AuthResult>('/auth', { email, password });
 
-    const data = await result.json();
-    if (!result.ok) {
-      return toast.error(data.error || 'Login failed. Please try again.');
-    }
-
-    if (data.success && data.data.token) {
-      toast.success('Login successful!');
-      localStorage.setItem('token', data.data.token);
-      navigate(`${paths.tfa}${location.search}`);
-    } else if (data.success && data.data.twoFactorAuthenticationOptions) {
-      try {
-        const asseRep = await startAuthentication(
-          data.data.twoFactorAuthenticationOptions
-        );
-        const response = await fetch(`${apiBaseUrl}/auth`, {
-          body: JSON.stringify({ email, password, twoFactorAuthData: asseRep }),
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            authorization: `${localStorage.getItem('token')}`
-          }
-        });
-
-        const responseData = await response.json();
-
-        if (response.ok && responseData.data.token) {
-          localStorage.setItem('token', data.data.token);
-          navigate(`${paths.tfa}${location.search}`);
-        } else {
-          toast.error(
-            responseData.error ||
-              'Two factor authentication failed. Please try again.'
-          );
-        }
-      } catch (err) {
-        console.log(err);
-        toast.error('Two factor authentication failed. Please try again.');
+      if (result.success && result.data.token) {
+        handleSuccessfullogin(result.data.token, true);
         return;
       }
+
+      if (result.success && result.data.twoFactorAuthenticationOptions) {
+        const asseRep = await startAuthentication(
+          result.data.twoFactorAuthenticationOptions
+        );
+
+        const authResult = await api.post<AuthResult>('/auth', {
+          email,
+          password,
+          twoFactorAuthData: asseRep
+        });
+
+        if (authResult.success && authResult.data.token) {
+          handleSuccessfullogin(authResult.data.token, false);
+          return;
+        }
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Login failed. Please try again.');
     }
   }
 

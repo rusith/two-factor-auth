@@ -1,6 +1,7 @@
+import { tokenKey } from '@app/consts';
+
 function getToken() {
-  console.log(localStorage.getItem('token'));
-  return localStorage.getItem('token');
+  return localStorage.getItem(tokenKey);
 }
 
 export function isLoggedIn() {

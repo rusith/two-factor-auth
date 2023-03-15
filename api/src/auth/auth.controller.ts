@@ -53,4 +53,18 @@ export class AuthControllerImpl
       return this.handleError(err, res);
     }
   }
+
+  async removeTwoFactorRegistration(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const result = await this.authService.removeTwoFactorRegistration(
+        this.getUserId(res)
+      );
+      this.handleSuccess(result, res);
+    } catch (err) {
+      return this.handleError(err, res);
+    }
+  }
 }

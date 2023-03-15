@@ -43,6 +43,12 @@ app.post(
   authController.verifyTwoFactorRegistration.bind(authController)
 );
 
+app.delete(
+  '/api/v1/auth/two-factor-auth',
+  authenticate,
+  authController.removeTwoFactorRegistration.bind(authController)
+);
+
 app.listen(configProvider.getPort(), () => {
   console.log(`🚀 Listening on port ${configProvider.getPort()}`);
 });

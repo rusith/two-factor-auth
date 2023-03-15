@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint",
     "test": "jest",
-    "dev": "nodemon --watch . --exec ts-node src/index.ts --",
+    "dev": "prisma migrate dev && nodemon --watch . --exec ts-node src/index.ts --",
     "build": "tsc",
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
