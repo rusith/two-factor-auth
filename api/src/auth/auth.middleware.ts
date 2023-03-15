@@ -7,7 +7,8 @@ export function authenticatedApi(
   return async (req: Request, res: Response, next: () => void) => {
     function sendUnauthorized() {
       res.setHeader('Content-Type', 'application/json');
-      res.status(401).send({ success: false, error: 'Unauthorized' });
+      res.status(401);
+      res.send({ success: false, error: 'Unauthorized', data: null });
     }
 
     const header = req.headers.authorization;

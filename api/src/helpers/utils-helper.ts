@@ -14,4 +14,8 @@ export class UtilHelperImpl implements UtilHelper {
     hash.update(password);
     return hash.digest('hex');
   }
+
+  base64ToBuffer(base64: string): Buffer {
+    return Buffer.from(base64, 'base64');
+  }
 }

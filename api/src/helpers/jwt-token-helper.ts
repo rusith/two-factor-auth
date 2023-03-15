@@ -47,6 +47,5 @@ export class JWTTokenHelper implements AuthTokenHelper {
         }
       );
     });
-    throw new Error('Method not implemented.');
   }
 }

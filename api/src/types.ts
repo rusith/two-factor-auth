@@ -7,7 +7,9 @@ const TYPES = {
   UserController: Symbol.for('UserController'),
 
   AuthService: Symbol.for('AuthService'),
-  UserService: Symbol.for('UserService')
+  UserService: Symbol.for('UserService'),
+  DBProvider: Symbol.for('DBProvider'),
+  AuthProvider: Symbol.for('AuthProvider')
 };
 
 export { TYPES };

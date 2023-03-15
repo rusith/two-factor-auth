@@ -6,7 +6,7 @@ import {
 export interface LoginRequest {
   email: string;
   password: string;
-  twoFactorAuthData: AuthenticationResponseJSON;
+  twoFactorAuthData?: AuthenticationResponseJSON;
 }
 
 export interface LoginResponse {

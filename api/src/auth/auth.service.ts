@@ -1,20 +1,14 @@
 import { ValidationError } from '@app/errors/ValidationError';
-import { AuthTokenHelper, ConfigProvider, UtilHelper } from '@app/helpers';
+import {
+  AuthProvider,
+  AuthTokenHelper,
+  ConfigProvider,
+  PublicKeyCredentialCreationOptions,
+  RegistrationResponse,
+  UtilHelper
+} from '@app/helpers';
+import { DBProvider } from '@app/helpers/db-provider';
 import { TYPES } from '@app/types';
-import { PrismaClient, User, UserAuthenticator } from '@prisma/client';
-import {
-  generateAuthenticationOptions,
-  generateRegistrationOptions,
-  verifyAuthenticationResponse,
-  verifyRegistrationResponse
-} from '@simplewebauthn/server';
-import {
-  AuthenticationResponseJSON,
-  AuthenticatorDevice,
-  AuthenticatorTransportFuture,
-  PublicKeyCredentialCreationOptionsJSON,
-  RegistrationResponseJSON
-} from '@simplewebauthn/typescript-types';
 import { inject, injectable } from 'inversify';
 import { AuthService } from '.';
 import { LoginRequest, LoginResponse } from './auth.dto';
@@ -26,11 +20,15 @@ export class AuthServiceImpl implements AuthService {
     @inject(TYPES.AuthTokenHelper)
     private readonly authTokenHelper: AuthTokenHelper,
     @inject(TYPES.ConfigProvider)
-    private readonly configProvider: ConfigProvider
+    private readonly configProvider: ConfigProvider,
+    @inject(TYPES.DBProvider)
+    private readonly dbProvider: DBProvider,
+    @inject(TYPES.AuthProvider)
+    private readonly authProvider: AuthProvider
   ) {}
 
   async login(data: LoginRequest): Promise<LoginResponse> {
-    const prismaClient = new PrismaClient();
+    const prismaClient = this.dbProvider.createClient();
     if (!data.email) {
       throw new ValidationError('Email is required');
     }
@@ -64,28 +62,28 @@ export class AuthServiceImpl implements AuthService {
       if (!data.twoFactorAuthData) {
         return {
           twoFactorAuthenticationOptions:
-            await this.generateTwoFactorAuthenticationOptions(
-              user.userAuthenticators,
-              user.id
+            await this.authProvider.generateAuthenticationOptions(
+              user.id,
+              user.userAuthenticators
             )
         };
       }
 
       if (
-        await this.verifyTwoFactorAuthentication(
+        await this.authProvider.verifyAuthenticationResponse(
           data.twoFactorAuthData,
-          user,
+          user.currentChallenge ?? '',
           user.userAuthenticators
         )
       ) {
-        const token = await this.authTokenHelper.generateAuthToken(user.id);
         return {
-          token: `Bearer ${token}`
+          token: `Bearer ${await this.authTokenHelper.generateAuthToken(
+            user.id
+          )}`
         };
       }
 
-      // TODO Should be auth error
-      throw new ValidationError('Failed to verify two factor authentication');
+      throw new ValidationError('Failed to verify two-factor authentication');
     }
 
     const token = await this.authTokenHelper.generateAuthToken(user.id);
@@ -96,161 +94,35 @@ export class AuthServiceImpl implements AuthService {
 
   async getTwoFactorRegistrationOptions(
     userId: string
-  ): Promise<PublicKeyCredentialCreationOptionsJSON> {
-    const prismaClient = new PrismaClient();
-    const user = await prismaClient.user.findFirst({ where: { id: userId } });
+  ): Promise<PublicKeyCredentialCreationOptions> {
+    const dbClient = this.dbProvider.createClient();
+    const user = await dbClient.user.findFirst({ where: { id: userId } });
 
     if (!user) {
       throw new ValidationError('Invalid User');
     }
 
-    const userAuthenticators =
-      await new PrismaClient().userAuthenticator.findMany({
-        where: { userId }
-      });
-
-    const options = generateRegistrationOptions({
-      rpName: this.configProvider.getAuthRelyingPartyName(),
-      rpID: this.configProvider.getAuthRelyingPartyId(),
-      userID: user.id,
-      userName: user.email,
-      userDisplayName: user.name,
-      attestationType: 'none',
-      excludeCredentials: userAuthenticators.map((authenticator) => ({
-        id: Buffer.from(authenticator.credentialID, 'base64'),
-        type: 'public-key',
-        transports: authenticator.transports
-          .split(',')
-          .map((t) => t.trim() as AuthenticatorTransportFuture)
-      }))
+    const userAuthenticators = await dbClient.userAuthenticator.findMany({
+      where: { userId }
     });
 
-    await prismaClient.user.update({
-      where: { id: userId },
-      data: {
-        currentChallange: options.challenge
-      }
-    });
-
-    return options;
+    return await this.authProvider.generateRegistrationOptions(
+      user,
+      userAuthenticators
+    );
   }
 
   async verifyTwoFactorRegistration(
-    data: RegistrationResponseJSON,
+    data: RegistrationResponse,
     userId: string
   ): Promise<boolean> {
-    const prismaClient = new PrismaClient();
-    const user = await prismaClient.user.findFirst({ where: { id: userId } });
+    const dbClient = this.dbProvider.createClient();
+    const user = await dbClient.user.findFirst({ where: { id: userId } });
 
-    if (!user || !user.currentChallange) {
+    if (!user || !user.currentChallenge) {
       throw new ValidationError('Invalid User');
     }
 
-    console.log(this.configProvider.getAuthRelyingPartyOrigin());
-
-    const verification = await verifyRegistrationResponse({
-      response: data,
-      expectedChallenge: user.currentChallange,
-      expectedOrigin: this.configProvider.getAuthRelyingPartyOrigin(),
-      expectedRPID: this.configProvider.getAuthRelyingPartyId()
-    });
-
-    if (verification.verified && verification.registrationInfo) {
-      await prismaClient.userAuthenticator.create({
-        data: {
-          userId,
-          credentialID: Buffer.from(
-            verification.registrationInfo.credentialID.buffer
-          ).toString('base64'),
-          credentialPublicKey: Buffer.from(
-            verification.registrationInfo.credentialPublicKey
-          ),
-          counter: verification.registrationInfo.counter,
-          transports: '',
-          credentialBackedUp: verification.registrationInfo.credentialBackedUp,
-          credentialDeviceType:
-            verification.registrationInfo.credentialDeviceType
-        }
-      });
-
-      return true;
-    }
-
-    return false;
-  }
-
-  private async verifyTwoFactorAuthentication(
-    data: AuthenticationResponseJSON,
-    user: User,
-    authenticators: UserAuthenticator[]
-  ) {
-    // TODO Check
-    if (!user.currentChallange) {
-      throw new ValidationError('Invalid User');
-    }
-
-    const authenticator = authenticators.find((a) => {
-      return Buffer.from(a.credentialID, 'base64').compare(
-        Buffer.from(data.id)
-      );
-    });
-
-    if (!authenticator) {
-      throw new ValidationError('Invalid Authenticator');
-    }
-
-    const verification = await verifyAuthenticationResponse({
-      response: data,
-      expectedChallenge: user.currentChallange,
-      expectedOrigin: this.configProvider.getAuthRelyingPartyOrigin(),
-      expectedRPID: this.configProvider.getAuthRelyingPartyId(),
-      authenticator:
-        this.mapUserAuthenticatorToAuthenticatorDevice(authenticator)
-    });
-
-    if (!verification.verified || !verification.authenticationInfo) {
-      return false;
-    }
-
-    await new PrismaClient().userAuthenticator.update({
-      where: { credentialID: authenticator.credentialID },
-      data: {
-        counter: verification.authenticationInfo.newCounter
-      }
-    });
-
-    return verification.verified;
-  }
-
-  private async generateTwoFactorAuthenticationOptions(
-    authenticators: UserAuthenticator[],
-    userId: string
-  ) {
-    const options = generateAuthenticationOptions({
-      allowCredentials: authenticators.map((authenticator) => ({
-        id: Buffer.from(authenticator.credentialID, 'base64'),
-        type: 'public-key'
-      })),
-      userVerification: 'preferred'
-    });
-
-    await new PrismaClient().user.update({
-      where: { id: userId },
-      data: {
-        currentChallange: options.challenge
-      }
-    });
-
-    return options;
-  }
-
-  private mapUserAuthenticatorToAuthenticatorDevice(
-    userAuthenticator: UserAuthenticator
-  ): AuthenticatorDevice {
-    return {
-      credentialID: Buffer.from(userAuthenticator.credentialID, 'base64'),
-      credentialPublicKey: userAuthenticator.credentialPublicKey,
-      counter: Number(userAuthenticator.counter)
-    };
+    return this.authProvider.verifyRegistrationResponse(data, user);
   }
 }
