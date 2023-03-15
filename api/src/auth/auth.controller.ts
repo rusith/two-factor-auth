@@ -24,7 +24,7 @@ export class AuthControllerImpl
   }
 
   async getTwoFactorRegistrationOptions(
-    req: Request,
+    _: Request,
     res: Response
   ): Promise<void> {
     try {

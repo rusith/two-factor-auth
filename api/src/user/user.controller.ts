@@ -27,8 +27,7 @@ export class UserControllerImpl
 
   async signUp(req: Request, res: Response): Promise<void> {
     try {
-      await this.userService.signUp(req.body);
-      this.handleSuccess(null, res);
+      this.handleSuccess(await this.userService.signUp(req.body), res);
     } catch (err) {
       this.handleError(err, res);
     }

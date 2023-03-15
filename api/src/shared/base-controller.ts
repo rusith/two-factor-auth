@@ -16,33 +16,24 @@ export class BaseController {
 
   protected handleError(err: unknown, res: Response) {
     res.setHeader('Content-Type', 'application/json');
+
+    function send(status: number, error: string) {
+      res.status(status);
+      res.send({ success: false, error, data: null });
+    }
+
     if (err instanceof ValidationError) {
-      res.status(400);
-      res.send({
-        success: false,
-        error: err.message,
-        data: null
-      });
+      send(400, err.message);
     } else if (err instanceof NotFoundError) {
-      res.status(404);
-      res.send({
-        success: false,
-        error: 'Resource not found',
-        data: null
-      });
+      send(404, err.message || 'Resource not found');
     } else {
       // eslint-disable-next-line no-console
       console.log('Unexpected error: ', err);
-      res.status(400);
-      res.send({
-        success: false,
-        error: 'An unexpected error occurred',
-        data: null
-      });
+      send(500, 'Unexpected error occurred');
     }
   }
 
   protected getUserId(res: Response) {
-    return res.locals.userId;
+    return res.locals?.userId;
   }
 }
