@@ -1,7 +1,6 @@
 ## Web Two Factor Authentication
 
-This is a sample project to demonstrate how to implement a two factor authentication using web technologies.
-
+This is a sample project to demonstrate how to implement a two-factor authentication system using web technologies.
 
 ### High-level overview
 
@@ -10,7 +9,7 @@ This is a sample project to demonstrate how to implement a two factor authentica
   - Login - Login form with email and password.
   - Register - Sign up page with name, email password.
   - Dashboard - the main page of the app. this page is protected and can only be accessed by authenticated users.
-- This app uses JWT for authentication and Webauthn for two factor authentication.
+- This app uses JWT for authentication and Webauthn for two-factor authentication.
 - When a user goes into the dashboard, if the user is not authenticated, will be redirected to the login page.
 - If the user is not registered, She can go to the register page and create an account.
 - After the user is registered, she will be redirected to the login page.
@@ -25,13 +24,6 @@ This is a sample project to demonstrate how to implement a two factor authentica
 ![](./docs/images/high-level.jpg)
 
 
-#### Notes
-
-- The app will connect to the API using only web-sockets.
-- Redis pub/sub will be used to send game updates to the connected players in real time.
-- A database (MongoDB) will be used to persist the game state for later use.
-- The app should be distributable through a CDN.
-- API will only keep connected sockets in memory. the API should be horizontally scalable.
 
 ### App notes
 
@@ -60,17 +52,14 @@ This is a sample project to demonstrate how to implement a two factor authentica
   - `helpers` - contans helper classes.
   - `shared` - shared base classes and interfaces.
 
+
+### Webauthen
+
+This app ueses Webauthn for two-factor authentication. Implemented with the help of 
+(SimpleWebAuthn)[https://simplewebauthn.dev/].
+
+
 ### CI/CD
 
 - The app and the API will be tested and linted for every push using Github Actions.
 - The workflow is defined in the `.github/workflows` folder.
-
-### Possible AWS architecture 
-
-![](./docs/images/aws.jpg)
-
-
-### UX Design (Initial design)
-
-[Figma](https://www.figma.com/file/XC8AZwsZi2vPGVHY5PK7NT/Game-of-Three?node-id=0%3A1&t=4PQaKn2vrGkvaAuQ-1)
-
