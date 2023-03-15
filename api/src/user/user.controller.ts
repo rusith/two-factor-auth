@@ -15,6 +15,16 @@ export class UserControllerImpl
     super();
   }
 
+  async getCurrentUser(_: Request, res: Response): Promise<void> {
+    const userId = res.locals.userId;
+    try {
+      const result = await this.userService.getUser(userId);
+      this.handleSuccess(result, res);
+    } catch (err) {
+      this.handleError(err, res);
+    }
+  }
+
   async signUp(req: Request, res: Response): Promise<void> {
     try {
       await this.userService.signUp(req.body);

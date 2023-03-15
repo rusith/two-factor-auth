@@ -1,7 +1,5 @@
-import { BaseResponse } from '@app/shared/interfaces/base-response';
 import {
   AuthenticationResponseJSON,
-  PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON
 } from '@simplewebauthn/typescript-types';
 
@@ -11,15 +9,7 @@ export interface LoginRequest {
   twoFactorAuthData: AuthenticationResponseJSON;
 }
 
-export interface LoginResultDTO {
+export interface LoginResponse {
   token?: string;
   twoFactorAuthenticationOptions?: PublicKeyCredentialRequestOptionsJSON;
 }
-
-export interface LoginResponse extends BaseResponse<LoginResultDTO> {
-  success: boolean;
-  errors: string[];
-}
-
-export type TwoFactorRegistrationResponse =
-  BaseResponse<PublicKeyCredentialCreationOptionsJSON>;

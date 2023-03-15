@@ -1,3 +1,4 @@
+import { NotFoundError } from '@app/errors/NotFoundError';
 import { ValidationError } from '@app/errors/ValidationError';
 import { Response } from 'express';
 import { injectable } from 'inversify';
@@ -8,7 +9,7 @@ export class BaseController {
     res.setHeader('Content-Type', 'application/json');
     res.send({
       success: true,
-      errors: null,
+      error: null,
       data
     });
   }
@@ -19,7 +20,14 @@ export class BaseController {
       res.status(400);
       res.send({
         success: false,
-        errors: [err.message],
+        error: err.message,
+        data: null
+      });
+    } else if (err instanceof NotFoundError) {
+      res.status(404);
+      res.send({
+        success: false,
+        error: 'Resource not found',
         data: null
       });
     } else {
@@ -28,7 +36,7 @@ export class BaseController {
       res.status(400);
       res.send({
         success: false,
-        errors: ['An unexpected error occurred'],
+        error: 'An unexpected error occurred',
         data: null
       });
     }

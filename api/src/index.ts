@@ -12,8 +12,7 @@ const app = express();
 app.use(
   cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
-    origin: '*',
-    preflightContinue: true
+    origin: '*'
   })
 );
 
@@ -26,17 +25,22 @@ const authTokenHelper = container.get<AuthTokenHelper>(TYPES.AuthTokenHelper);
 
 const authenticate = authenticatedApi(authTokenHelper);
 
-app.post('/api/v1/users', userController.signUp);
-app.post('/api/v1/profile', authController.login);
+app.post('/api/v1/users', userController.signUp.bind(userController));
 app.get(
-  '/api/v1/profile/two-factor-auth/options',
+  '/api/v1/users/me',
   authenticate,
-  authController.getTwoFactorRegistrationOptions
+  userController.getCurrentUser.bind(userController)
+);
+app.post('/api/v1/auth', authController.login.bind(authController));
+app.get(
+  '/api/v1/auth/two-factor-auth/options',
+  authenticate,
+  authController.getTwoFactorRegistrationOptions.bind(authController)
 );
 app.post(
-  '/api/v1/profile/two-factor-auth/verify',
+  '/api/v1/auth/two-factor-auth/verify',
   authenticate,
-  authController.getTwoFactorRegistrationOptions
+  authController.verifyTwoFactorRegistration.bind(authController)
 );
 
 app.listen(configProvider.getPort(), () => {

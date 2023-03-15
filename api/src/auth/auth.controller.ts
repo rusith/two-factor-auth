@@ -44,13 +44,11 @@ export class AuthControllerImpl
     res: Response
   ): Promise<void> {
     try {
-      this.handleSuccess(
-        await this.authService.verifyTwoFactorRegistration(
-          req.body,
-          this.getUserId(res)
-        ),
-        res
+      const result = await this.authService.verifyTwoFactorRegistration(
+        req.body,
+        this.getUserId(res)
       );
+      this.handleSuccess(result, res);
     } catch (err) {
       return this.handleError(err, res);
     }

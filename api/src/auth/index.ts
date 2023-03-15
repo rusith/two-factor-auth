@@ -3,10 +3,10 @@ import {
   RegistrationResponseJSON
 } from '@simplewebauthn/typescript-types';
 import { Request, Response } from 'express';
-import { LoginRequest, LoginResultDTO } from './auth.dto';
+import { LoginRequest, LoginResponse } from './auth.dto';
 
 export interface AuthService {
-  login(data: LoginRequest): Promise<LoginResultDTO>;
+  login(data: LoginRequest): Promise<LoginResponse>;
   getTwoFactorRegistrationOptions(
     userId: string
   ): Promise<PublicKeyCredentialCreationOptionsJSON>;

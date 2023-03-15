@@ -1,5 +1,5 @@
 export interface BaseResponse<T> {
   success: boolean;
-  errors: string[] | null;
+  error: string | null;
   data: T | null;
 }

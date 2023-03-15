@@ -17,7 +17,7 @@ import {
 } from '@simplewebauthn/typescript-types';
 import { inject, injectable } from 'inversify';
 import { AuthService } from '.';
-import { LoginRequest, LoginResultDTO } from './auth.dto';
+import { LoginRequest, LoginResponse } from './auth.dto';
 
 @injectable()
 export class AuthServiceImpl implements AuthService {
@@ -29,7 +29,7 @@ export class AuthServiceImpl implements AuthService {
     private readonly configProvider: ConfigProvider
   ) {}
 
-  async login(data: LoginRequest): Promise<LoginResultDTO> {
+  async login(data: LoginRequest): Promise<LoginResponse> {
     const prismaClient = new PrismaClient();
     if (!data.email) {
       throw new ValidationError('Email is required');
@@ -80,7 +80,7 @@ export class AuthServiceImpl implements AuthService {
       ) {
         const token = await this.authTokenHelper.generateAuthToken(user.id);
         return {
-          token
+          token: `Bearer ${token}`
         };
       }
 
@@ -90,7 +90,7 @@ export class AuthServiceImpl implements AuthService {
 
     const token = await this.authTokenHelper.generateAuthToken(user.id);
     return {
-      token
+      token: `Bearer ${token}`
     };
   }
 
@@ -146,6 +146,8 @@ export class AuthServiceImpl implements AuthService {
       throw new ValidationError('Invalid User');
     }
 
+    console.log(this.configProvider.getAuthRelyingPartyOrigin());
+
     const verification = await verifyRegistrationResponse({
       response: data,
       expectedChallenge: user.currentChallange,
@@ -158,7 +160,7 @@ export class AuthServiceImpl implements AuthService {
         data: {
           userId,
           credentialID: Buffer.from(
-            verification.registrationInfo.credentialID
+            verification.registrationInfo.credentialID.buffer
           ).toString('base64'),
           credentialPublicKey: Buffer.from(
             verification.registrationInfo.credentialPublicKey
@@ -186,9 +188,12 @@ export class AuthServiceImpl implements AuthService {
     if (!user.currentChallange) {
       throw new ValidationError('Invalid User');
     }
-    const authenticator = authenticators.find(
-      (a) => a.credentialID === data.id
-    );
+
+    const authenticator = authenticators.find((a) => {
+      return Buffer.from(a.credentialID, 'base64').compare(
+        Buffer.from(data.id)
+      );
+    });
 
     if (!authenticator) {
       throw new ValidationError('Invalid Authenticator');
