@@ -2,26 +2,40 @@
 import express from 'express';
 import cors from 'cors';
 import { container } from './inversify.config';
-import { ConfigProvider } from './helpers';
+import { AuthTokenHelper, ConfigProvider } from './helpers';
 import { TYPES } from './types';
 import { AuthController } from './auth';
+import { UserController } from './user';
+import { authenticatedApi } from './auth/auth.middleware';
 
 const app = express();
-// TODO use correct cors
-app.use(cors());
+app.use(
+  cors({
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: '*',
+    preflightContinue: true
+  })
+);
+
 app.use(express.json());
 
 const configProvider = container.get<ConfigProvider>(TYPES.ConfigProvider);
 const authController = container.get<AuthController>(TYPES.AuthController);
+const userController = container.get<UserController>(TYPES.UserController);
+const authTokenHelper = container.get<AuthTokenHelper>(TYPES.AuthTokenHelper);
 
-app.post('/api/v1/users', authController.signUp);
+const authenticate = authenticatedApi(authTokenHelper);
+
+app.post('/api/v1/users', userController.signUp);
 app.post('/api/v1/profile', authController.login);
-app.post(
-  '/api/v1/profile/two-factor-registrations',
+app.get(
+  '/api/v1/profile/two-factor-auth/options',
+  authenticate,
   authController.getTwoFactorRegistrationOptions
 );
 app.post(
-  '/api/v1/profile/two-factor-registrations/verify',
+  '/api/v1/profile/two-factor-auth/verify',
+  authenticate,
   authController.getTwoFactorRegistrationOptions
 );
 

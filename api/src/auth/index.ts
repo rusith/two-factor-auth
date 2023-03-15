@@ -3,10 +3,9 @@ import {
   RegistrationResponseJSON
 } from '@simplewebauthn/typescript-types';
 import { Request, Response } from 'express';
-import { LoginRequest, LoginResultDTO, SignUpRequest } from './auth.dto';
+import { LoginRequest, LoginResultDTO } from './auth.dto';
 
 export interface AuthService {
-  signUp(data: SignUpRequest): Promise<void>;
   login(data: LoginRequest): Promise<LoginResultDTO>;
   getTwoFactorRegistrationOptions(
     userId: string
@@ -19,7 +18,6 @@ export interface AuthService {
 }
 
 export interface AuthController {
-  signUp(req: Request, res: Response): Promise<void>;
   login(req: Request, res: Response): Promise<void>;
   getTwoFactorRegistrationOptions(req: Request, res: Response): Promise<void>;
   verifyTwoFactorRegistration(req: Request, res: Response): Promise<void>;

@@ -17,7 +17,7 @@ import {
 } from '@simplewebauthn/typescript-types';
 import { inject, injectable } from 'inversify';
 import { AuthService } from '.';
-import { SignUpRequest, LoginRequest, LoginResultDTO } from './auth.dto';
+import { LoginRequest, LoginResultDTO } from './auth.dto';
 
 @injectable()
 export class AuthServiceImpl implements AuthService {
@@ -28,39 +28,6 @@ export class AuthServiceImpl implements AuthService {
     @inject(TYPES.ConfigProvider)
     private readonly configProvider: ConfigProvider
   ) {}
-
-  public async signUp(data: SignUpRequest): Promise<void> {
-    if (!data.name) {
-      throw new ValidationError('Name is required');
-    }
-    if (!data.email) {
-      throw new ValidationError('Email is required');
-    }
-    if (!data.password) {
-      throw new ValidationError('Password is required');
-    }
-
-    const salt = this.utilHelper.getUniqueString(30);
-
-    const userWithEmail = await new PrismaClient().user.findFirst({
-      where: {
-        email: data.email
-      }
-    });
-
-    if (userWithEmail) {
-      throw new ValidationError('Email already exists');
-    }
-
-    await new PrismaClient().user.create({
-      data: {
-        email: data.email,
-        name: data.name,
-        salt,
-        password: this.utilHelper.saltHashPassword(data.password, salt)
-      }
-    });
-  }
 
   async login(data: LoginRequest): Promise<LoginResultDTO> {
     const prismaClient = new PrismaClient();
