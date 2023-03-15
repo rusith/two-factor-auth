@@ -56,7 +56,7 @@ This is a sample project to demonstrate how to implement a two-factor authentica
 ### Webauthen
 
 This app ueses Webauthn for two-factor authentication. Implemented with the help of 
-(SimpleWebAuthn)[https://simplewebauthn.dev/].
+[SimpleWebAuthn](https://simplewebauthn.dev/)
 
 
 ### CI/CD
