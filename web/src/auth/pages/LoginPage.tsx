@@ -44,9 +44,15 @@ const LoginPage: React.FC = () => {
       }
 
       if (result.success && result.data.twoFactorAuthenticationOptions) {
-        const asseRep = await startAuthentication(
-          result.data.twoFactorAuthenticationOptions
-        );
+        let asseRep;
+        try {
+          asseRep = await startAuthentication(
+            result.data.twoFactorAuthenticationOptions
+          );
+        } catch (e: any) {
+          toast.error('FTA failed. Please try again.');
+          return;
+        }
 
         const authResult = await api.post<AuthResult>('/auth', {
           email,

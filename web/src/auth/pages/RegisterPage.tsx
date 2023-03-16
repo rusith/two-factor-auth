@@ -26,6 +26,9 @@ const RegisterPage: React.FC = () => {
     try {
       await api.post('/users', { name, email, password });
       toast.success('Account created successfully!');
+      setName('');
+      setEmail('');
+      setPassword('');
       navigate(`${paths.login}${location.search}`);
     } catch (e: any) {
       return toast.error(e.message || 'Something went wrong');

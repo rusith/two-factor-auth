@@ -54,10 +54,7 @@ export class AuthControllerImpl
     }
   }
 
-  async removeTwoFactorRegistration(
-    req: Request,
-    res: Response
-  ): Promise<void> {
+  async removeTwoFactorRegistration(_: Request, res: Response): Promise<void> {
     try {
       const result = await this.authService.removeTwoFactorRegistration(
         this.getUserId(res)
