@@ -2,6 +2,9 @@
 
 This is a sample project to demonstrate how to implement a two-factor authentication system using web technologies.
 
+
+![](./docs/images/flow.jpg)
+
 ### How to run?
 
 1. Make sure you have the latest version of Docker with Docker Compose installed on your machine.
