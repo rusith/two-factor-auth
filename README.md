@@ -3,7 +3,7 @@
 This is a sample project to demonstrate how to implement a two-factor authentication system using web technologies.
 
 
-![](./docs/images/flow.jpg)
+<img src="./docs/images/flow.jpg" height="400">
 
 ### How to run?
 
