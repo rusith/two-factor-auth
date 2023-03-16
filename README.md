@@ -34,7 +34,7 @@ This will start a development server.
 
 ### High-level architecture
 
-![](./docs/images/high-level.jpg)
+<img src="./docs/images/high-level.jpg" height="400">
 
 
 
