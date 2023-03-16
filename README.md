@@ -2,6 +2,16 @@
 
 This is a sample project to demonstrate how to implement a two-factor authentication system using web technologies.
 
+### How to run?
+
+1. Make sure you have the latest version of Docker with Docker Compose installed on your machine.
+2. Clone the repository.
+3. Run `docker-compose up` in the root directory of the project.
+4. Make sure the app and API are running.
+5. Open `http://localhost:5173` in your browser.
+
+This will start a development server.
+
 ### High-level overview
 
 - There are 4 main pages in the app
@@ -52,6 +62,15 @@ This is a sample project to demonstrate how to implement a two-factor authentica
   - `helpers` - contans helper classes.
   - `shared` - shared base classes and interfaces.
 
+
+### API Endpoints
+
+- `POST /api/v1/users` - Sign up a new user.
+- `GET /api/v1/users/me` - Get the currently logged in user.
+- `POST /api/v1/auth` - Sign in.
+- `GET /api/v1/auth/two-factor-auth/options` - Get options for TFA registration.
+- `POST /api/v1/auth/two-factor-auth/verify` - Verify the TFA registration.
+- `DELETE /api/v1/auth/two-factor-auth` - De-Register the TFA.
 
 ### Webauthen
 
